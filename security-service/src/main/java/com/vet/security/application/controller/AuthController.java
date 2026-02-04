@@ -30,8 +30,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public void register(@RequestBody @Valid RegisterRequest request) {
-        authUseCase.register(request);
+    public Long register(@RequestBody @Valid RegisterRequest request) {
+        return authUseCase.register(request);
     }
 
     @PostMapping("/refresh")
