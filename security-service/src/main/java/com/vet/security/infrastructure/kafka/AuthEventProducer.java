@@ -28,4 +28,5 @@ public class AuthEventProducer {
 
         kafkaTemplate.send("auth-user-events", event);
     }
+    
 }

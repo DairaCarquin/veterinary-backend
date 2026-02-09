@@ -3,6 +3,7 @@ package com.vet.security.application.service;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import com.vet.security.domain.port.out.RefreshTokenRepositoryPort;
 import com.vet.security.domain.port.out.RoleRepositoryPort;
 import com.vet.security.domain.port.out.TokenProviderPort;
 import com.vet.security.domain.port.out.UserRepositoryPort;
+import com.vet.security.infrastructure.kafka.AuthEventProducer;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +36,8 @@ public class AuthUseCaseImpl implements AuthUseCase {
     private final TokenProviderPort tokenProvider;
     private final BCryptPasswordEncoder passwordEncoder;
 
+    private final AuthEventProducer authEventProducer;
+    
     @Override
     public LoginResponse login(LoginRequest request) {
 
@@ -61,11 +65,11 @@ public class AuthUseCaseImpl implements AuthUseCase {
     }
 
     @Override
-    public void register(RegisterRequest request) {
+    public Long register(RegisterRequest request) {
 
         Set<Role> roles = request.roles().stream()
                 .map(roleRepository::findByName)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
 
         User user = new User();
         user.setUsername(request.username());
@@ -74,8 +78,13 @@ public class AuthUseCaseImpl implements AuthUseCase {
         user.setRoles(roles);
         user.setCreatedAt(Instant.now());
 
-        userRepository.save(user);
+        User saved = userRepository.save(user);
+
+        authEventProducer.publishUserCreated(saved);
+
+        return saved.getId();
     }
+
 
     @Override
     public RefreshResponse refreshToken(RefreshRequest request) {

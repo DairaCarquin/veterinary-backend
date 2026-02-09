@@ -11,7 +11,7 @@ public interface AuthUseCase {
 
     LoginResponse login(LoginRequest request);
 
-    void register(RegisterRequest request);
+    Long register(RegisterRequest request);
 
     RefreshResponse refreshToken(RefreshRequest request);
 
