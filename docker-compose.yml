@@ -38,6 +38,18 @@ services:
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
+  pet-service:
+    container_name: pet-service
+    build:
+      context: ./pet-service
+    image: pet-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - kafka
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
   client-service:
     container_name: client-service
     build:

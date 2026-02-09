@@ -25,9 +25,9 @@ public class PetRepositoryAdapter implements PetUseCase {
             throw new IllegalArgumentException("Only ADMIN or VETERINARIAN can create pets");
         }
 
-        // Validate clientId
+        // Set default clientId if not provided
         if (pet.getClientId() == null) {
-            throw new IllegalArgumentException("client_id is mandatory");
+            pet.setClientId(1L);
         }
 
         // Set initial status
@@ -102,17 +102,25 @@ public class PetRepositoryAdapter implements PetUseCase {
     }
 
     private PetEntity fromDomain(Pet domain) {
-        return PetEntity.builder()
-                .id(domain.getId())
+        PetEntity.PetEntityBuilder builder = PetEntity.builder()
                 .clientId(domain.getClientId())
                 .name(domain.getName())
                 .species(domain.getSpecies())
                 .breed(domain.getBreed())
                 .age(domain.getAge())
-                .createdAt(domain.getCreatedAt())
-                .updatedAt(domain.getUpdatedAt())
-                .status(domain.getStatus())
-                .build();
+                .status(domain.getStatus());
+
+        if (domain.getId() != null) {
+            builder.id(domain.getId());
+        }
+        if (domain.getCreatedAt() != null) {
+            builder.createdAt(domain.getCreatedAt());
+        }
+        if (domain.getUpdatedAt() != null) {
+            builder.updatedAt(domain.getUpdatedAt());
+        }
+
+        return builder.build();
     }
 
     private boolean isAdminOrVeterinarian(String role) {
