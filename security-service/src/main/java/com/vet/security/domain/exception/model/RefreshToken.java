@@ -1,4 +1,4 @@
-package com.vet.security.domain.model;
+package com.vet.security.domain.exception.model;
 
 import java.time.Instant;
 

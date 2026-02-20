@@ -30,9 +30,13 @@ public class UserEntity {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
     private boolean enabled;
+    
+    @Column(nullable = false)
+    private int status = 1; // 1 = activo, 0 = inactivo (borrado lógico)
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at")

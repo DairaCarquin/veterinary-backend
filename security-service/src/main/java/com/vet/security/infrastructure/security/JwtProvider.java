@@ -7,8 +7,8 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.vet.security.application.dto.response.TokenValidationResponse;
-import com.vet.security.domain.model.Role;
-import com.vet.security.domain.model.User;
+import com.vet.security.domain.exception.model.Role;
+import com.vet.security.domain.exception.model.User;
 import com.vet.security.domain.port.out.TokenProviderPort;
 
 import io.jsonwebtoken.Claims;
