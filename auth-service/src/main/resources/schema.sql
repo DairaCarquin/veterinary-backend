@@ -1,0 +1,24 @@
+CREATE TABLE IF NOT EXISTS roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role_id INTEGER NOT NULL,
+    CONSTRAINT fk_user_role
+        FOREIGN KEY (role_id)
+        REFERENCES roles(id)
+        ON DELETE RESTRICT
+);
+
+INSERT INTO roles (name) VALUES ('ADMIN')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO roles (name) VALUES ('CLIENT')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO roles (name) VALUES ('VETERINARY')
+ON CONFLICT (name) DO NOTHING;
