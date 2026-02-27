@@ -1,5 +1,7 @@
 package com.clinic.auth_service.domain.model;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -21,4 +23,8 @@ public class User {
     private String username;
     private String password;
     private Long roleId;
+
+    private Boolean enabled;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

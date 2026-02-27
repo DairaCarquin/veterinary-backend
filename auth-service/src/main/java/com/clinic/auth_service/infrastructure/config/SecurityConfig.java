@@ -18,6 +18,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/auth/**").permitAll()
+                        .pathMatchers("/roles/**").permitAll()
+                        .pathMatchers("/auth/users/**").permitAll()
                         .anyExchange().authenticated())
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(form -> form.disable())

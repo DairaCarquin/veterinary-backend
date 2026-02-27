@@ -1,5 +1,7 @@
 package com.clinic.auth_service.application.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,13 +11,15 @@ import org.springframework.web.server.ResponseStatusException;
 import com.clinic.auth_service.application.dto.request.RegisterRequest;
 import com.clinic.auth_service.application.dto.response.AuthResponse;
 import com.clinic.auth_service.application.dto.response.RegisterResponse;
+import com.clinic.auth_service.application.dto.response.UserResponse;
 import com.clinic.auth_service.domain.event.UserCreatedEvent;
 import com.clinic.auth_service.domain.model.User;
 import com.clinic.auth_service.domain.port.UserRepositoryPort;
-import com.clinic.auth_service.infrastructure.adapter.out.R2dbcRoleRepositoryAdapter;
+import com.clinic.auth_service.infrastructure.adapter.out.R2dbcRoleRepository;
 import com.clinic.auth_service.infrastructure.config.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -23,7 +27,7 @@ import reactor.core.publisher.Mono;
 public class AuthService {
 
         private final UserRepositoryPort userRepository;
-        private final R2dbcRoleRepositoryAdapter roleRepository;
+        private final R2dbcRoleRepository roleRepository;
         private final PasswordEncoder passwordEncoder;
         private final JwtUtil jwtUtil;
         private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -31,44 +35,80 @@ public class AuthService {
         public Mono<RegisterResponse> register(RegisterRequest request) {
 
                 return roleRepository.findByName(request.getRole())
-                .switchIfEmpty(
-                        Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rol inválido"))
-                )
-                .flatMap(role -> {
+                                .switchIfEmpty(
+                                                Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                                                "Rol inválido")))
+                                .flatMap(role -> {
 
-                        User user = User.builder()
-                                .username(request.getUsername())
-                                .password(passwordEncoder.encode(request.getPassword()))
-                                .roleId(role.getId())
-                                .build();
+                                        User user = User.builder()
+                                                        .username(request.getUsername())
+                                                        .password(passwordEncoder.encode(request.getPassword()))
+                                                        .roleId(role.getId())
+                                                        .build();
 
-                        return userRepository.save(user)
-                                .doOnSuccess(saved -> kafkaTemplate.send(
-                                                "user-created-topic",
-                                                new UserCreatedEvent(
-                                                                saved.getId(),
-                                                                saved.getUsername(),
-                                                                role.getName())))
-                                .map(saved -> RegisterResponse.builder()
-                                                .id(saved.getId())
-                                                .username(saved.getUsername())
-                                                .role(role.getName())
-                                                .build());
-                });
+                                        return userRepository.save(user)
+                                                        .doOnSuccess(saved -> kafkaTemplate.send(
+                                                                        "user-created-topic",
+                                                                        new UserCreatedEvent(
+                                                                                        saved.getId(),
+                                                                                        saved.getUsername(),
+                                                                                        role.getName())))
+                                                        .map(saved -> RegisterResponse.builder()
+                                                                        .id(saved.getId())
+                                                                        .username(saved.getUsername())
+                                                                        .role(role.getName())
+                                                                        .build());
+                                });
         }
 
         public Mono<AuthResponse> login(String username, String password) {
 
                 return userRepository.findByUsername(username)
-                        .filter(user -> passwordEncoder.matches(password, user.getPassword()))
-                        .flatMap(user -> roleRepository.findById(user.getRoleId())
-                                .map(role -> AuthResponse.builder()
-                                        .id(user.getId())
-                                        .username(user.getUsername())
-                                        .role(role.getName())
-                                        .accessToken(jwtUtil.generateAccessToken(user,
-                                                        role.getName()))
-                                        .refreshToken(jwtUtil.generateRefreshToken(user))
-                                        .build()));
+                                .filter(user -> passwordEncoder.matches(password, user.getPassword()))
+                                .flatMap(user -> roleRepository.findById(user.getRoleId())
+                                                .map(role -> AuthResponse.builder()
+                                                                .id(user.getId())
+                                                                .username(user.getUsername())
+                                                                .role(role.getName())
+                                                                .accessToken(jwtUtil.generateAccessToken(user,
+                                                                                role.getName()))
+                                                                .refreshToken(jwtUtil.generateRefreshToken(user))
+                                                                .build()));
+        }
+
+        public Flux<UserResponse> findAll(String username, Long roleId, int page, int size) {
+                int offset = page * size;
+
+                return userRepository.search(username, roleId, size, offset)
+                                .map(user -> UserResponse.builder()
+                                                .id(user.getId())
+                                                .username(user.getUsername())
+                                                .roleId(user.getRoleId())
+                                                .enabled(user.getEnabled())
+                                                .build());
+        }
+
+        public Mono<User> update(Long id, RegisterRequest request) {
+                return userRepository.findById(id)
+                                .flatMap(user -> {
+                                        user.setUsername(request.getUsername());
+                                        user.setPassword(passwordEncoder.encode(request.getPassword()));
+                                        user.setUpdatedAt(LocalDateTime.now());
+                                        return userRepository.save(user);
+                                });
+        }
+
+        public Mono<Void> toggleEnabled(Long id, boolean enabled) {
+                return userRepository.findById(id)
+                                .flatMap(user -> {
+                                        user.setEnabled(enabled);
+                                        user.setUpdatedAt(LocalDateTime.now());
+                                        return userRepository.save(user);
+                                })
+                                .then();
+        }
+
+        public Mono<Long> countUsers() {
+                return userRepository.countAll();
         }
 }

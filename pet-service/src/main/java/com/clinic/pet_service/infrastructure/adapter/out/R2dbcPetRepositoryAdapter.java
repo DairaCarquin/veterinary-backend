@@ -31,7 +31,17 @@ public class R2dbcPetRepositoryAdapter implements PetRepositoryPort {
     }
 
     @Override
-    public Flux<Pet> findAll() {
-        return repository.findAll();
+    public Flux<Pet> findAll(String name, String species, Long ownerId, int limit, int offset) {
+        return repository.search(name, species, ownerId, limit, offset);
+    }
+
+    @Override
+    public Mono<Long> countAll() {
+        return repository.count();
+    }
+
+    @Override
+    public Mono<Long> countEnabled() {
+        return repository.countByEnabledTrue();
     }
 }

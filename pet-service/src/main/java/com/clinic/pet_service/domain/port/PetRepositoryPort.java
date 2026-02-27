@@ -13,5 +13,10 @@ public interface PetRepositoryPort {
 
     Flux<Pet> findByOwnerId(Long ownerId);
 
-    Flux<Pet> findAll();
+    Flux<Pet> findAll(String name, String species, Long ownerId, int limit, int offset);
+
+    Mono<Long> countAll();
+
+    Mono<Long> countEnabled();
+
 }
