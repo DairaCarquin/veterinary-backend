@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -34,7 +35,9 @@ public class SecurityConfig {
          oauth.jwt((jwt) -> {
             jwt.jwtAuthenticationConverter(this.jwtAuthenticationConverter());
          });
-      }).build();
+      })
+      .cors(Customizer.withDefaults())
+      .build();
    }
 
    @Bean

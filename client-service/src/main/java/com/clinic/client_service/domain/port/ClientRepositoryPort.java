@@ -11,5 +11,10 @@ public interface ClientRepositoryPort {
 
     Mono<Client> findById(Long id);
 
-    Flux<Client> findAll();
+
+    Mono<Long> count();
+
+    Flux<Client> findByEnabledTrue();
+
+    Flux<Client> findAll(String name, String dni, int limit, int offset);
 }
