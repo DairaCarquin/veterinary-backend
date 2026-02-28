@@ -1,6 +1,8 @@
 package com.clinic.medical_history_service.application.service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,58 @@ public class MedicalEventService {
     private final R2dbcReferralRepository referralRepository;
     private final R2dbcTreatmentRepository treatmentRepository;
 
+    public Mono<Map<String, Object>> findAll(
+            Long appointmentId,
+            Long petId,
+            Long veterinarianId,
+            int page,
+            int size) {
+
+        int offset = page * size;
+
+        return medicalCaseRepository.search(
+                appointmentId,
+                petId,
+                veterinarianId,
+                size,
+                offset)
+                .collectList()
+                .zipWith(medicalCaseRepository.countFiltered(
+                        appointmentId,
+                        petId,
+                        veterinarianId))
+                .map(tuple -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("data", tuple.getT1());
+                    response.put("total", tuple.getT2());
+                    response.put("page", page);
+                    response.put("size", size);
+                    return response;
+                });
+    }
+
+    public Mono<Map<String, Object>> listDiagnosis(
+            Long caseId,
+            Long petId,
+            Long vetId,
+            int page,
+            int size) {
+
+        int offset = page * size;
+
+        return diagnosisRepository.search(caseId, petId, vetId, size, offset)
+                .collectList()
+                .zipWith(diagnosisRepository.countFiltered(caseId, petId, vetId))
+                .map(tuple -> {
+                    Map<String, Object> res = new HashMap<>();
+                    res.put("data", tuple.getT1());
+                    res.put("total", tuple.getT2());
+                    res.put("page", page);
+                    res.put("size", size);
+                    return res;
+                });
+    }
+
     public Mono<Void> validateCaseAndVet(Long caseId, Long vetId) {
 
         return medicalCaseRepository.findById(caseId)
@@ -55,6 +109,28 @@ public class MedicalEventService {
                 }));
     }
 
+    public Mono<Map<String, Object>> listAnalysis(
+            Long caseId,
+            Long petId,
+            Long vetId,
+            int page,
+            int size) {
+
+        int offset = page * size;
+
+        return analysisRepository.search(caseId, petId, vetId, size, offset)
+                .collectList()
+                .zipWith(analysisRepository.countFiltered(caseId, petId, vetId))
+                .map(tuple -> {
+                    Map<String, Object> res = new HashMap<>();
+                    res.put("data", tuple.getT1());
+                    res.put("total", tuple.getT2());
+                    res.put("page", page);
+                    res.put("size", size);
+                    return res;
+                });
+    }
+
     public Mono<Analysis> createAnalysis(Analysis analysis, Long vetId) {
 
         return validateCaseAndVet(analysis.getMedicalCaseId(), vetId)
@@ -65,6 +141,28 @@ public class MedicalEventService {
                 }));
     }
 
+    public Mono<Map<String, Object>> listReferral(
+            Long caseId,
+            Long petId,
+            Long vetId,
+            int page,
+            int size) {
+
+        int offset = page * size;
+
+        return referralRepository.search(caseId, petId, vetId, size, offset)
+                .collectList()
+                .zipWith(referralRepository.countFiltered(caseId, petId, vetId))
+                .map(tuple -> {
+                    Map<String, Object> res = new HashMap<>();
+                    res.put("data", tuple.getT1());
+                    res.put("total", tuple.getT2());
+                    res.put("page", page);
+                    res.put("size", size);
+                    return res;
+                });
+    }
+
     public Mono<Referral> createReferral(Referral referral, Long vetId) {
 
         return validateCaseAndVet(referral.getMedicalCaseId(), vetId)
@@ -73,6 +171,28 @@ public class MedicalEventService {
                     referral.setCreatedAt(LocalDateTime.now());
                     return referralRepository.save(referral);
                 }));
+    }
+
+    public Mono<Map<String, Object>> listTreatment(
+            Long caseId,
+            Long petId,
+            Long vetId,
+            int page,
+            int size) {
+
+        int offset = page * size;
+
+        return treatmentRepository.search(caseId, petId, vetId, size, offset)
+                .collectList()
+                .zipWith(treatmentRepository.countFiltered(caseId, petId, vetId))
+                .map(tuple -> {
+                    Map<String, Object> res = new HashMap<>();
+                    res.put("data", tuple.getT1());
+                    res.put("total", tuple.getT2());
+                    res.put("page", page);
+                    res.put("size", size);
+                    return res;
+                });
     }
 
     public Mono<Treatment> createTreatment(Treatment treatment, Long vetId) {

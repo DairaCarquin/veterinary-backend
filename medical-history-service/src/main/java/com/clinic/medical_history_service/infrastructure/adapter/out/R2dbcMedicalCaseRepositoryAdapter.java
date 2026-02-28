@@ -6,12 +6,12 @@ import com.clinic.medical_history_service.domain.model.MedicalCase;
 import com.clinic.medical_history_service.domain.port.MedicalCaseRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class R2dbcMedicalCaseRepositoryAdapter
-        implements MedicalCaseRepositoryPort {
+public class R2dbcMedicalCaseRepositoryAdapter implements MedicalCaseRepositoryPort {
 
     private final R2dbcMedicalCaseRepository repository;
 
@@ -28,5 +28,23 @@ public class R2dbcMedicalCaseRepositoryAdapter
     @Override
     public Mono<MedicalCase> findByAppointmentId(Long appointmentId) {
         return repository.findByAppointmentId(appointmentId);
+    }
+
+    @Override
+    public Flux<MedicalCase> search(
+            Long appointmentId,
+            Long petId,
+            Long veterinarianId,
+            int limit,
+            int offset) {
+        return repository.search(appointmentId, petId, veterinarianId, limit, offset);
+    }
+
+    @Override
+    public Mono<Long> countFiltered(
+            Long appointmentId,
+            Long petId,
+            Long veterinarianId) {
+        return repository.countFiltered(appointmentId, petId, veterinarianId);
     }
 }
