@@ -1,11 +1,15 @@
 package com.clinic.vet_service.infrastructure.adapter.in;
 
+import java.util.Map;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.clinic.vet_service.application.dto.request.UpdateVetRequest;
@@ -23,10 +27,16 @@ public class VetController {
 
     private final VetService service;
 
-    @PreAuthorize("hasAnyRole('ADMIN','CLIENT','VETERINARY')")
     @GetMapping
-    public Flux<Veterinarian> findAll() {
-        return service.findAll();
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENT','VETERINARY')")
+    public Mono<Map<String, Object>> findAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String specialty,
+            @RequestParam(required = false) Boolean available,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return service.findAll(name, specialty, available, page, size);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
@@ -42,5 +52,12 @@ public class VetController {
             @RequestBody UpdateVetRequest request) {
 
         return service.update(userId, request);
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<Void> toggle(@PathVariable Long id,
+            @RequestParam boolean enabled) {
+        return service.toggleEnabled(id, enabled);
     }
 }

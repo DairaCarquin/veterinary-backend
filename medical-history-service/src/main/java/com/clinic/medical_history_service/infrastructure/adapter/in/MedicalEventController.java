@@ -2,7 +2,9 @@ package com.clinic.medical_history_service.infrastructure.adapter.in;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,5 +60,49 @@ public class MedicalEventController {
 
         Long vetId = Long.valueOf(auth.getName());
         return service.createTreatment(treatment, vetId);
+    }
+
+    @PreAuthorize("hasRole('VETERINARY','ADMIN')")
+    @PutMapping("/analysis/{id}")
+    public Mono<Analysis> updateAnalysis(
+            @PathVariable Long id,
+            @RequestBody Analysis analysis,
+            Authentication auth) {
+
+        Long vetId = Long.valueOf(auth.getName());
+        return service.updateAnalysis(id, analysis, vetId);
+    }
+
+    @PreAuthorize("hasRole('VETERINARY','ADMIN')")
+    @PutMapping("/diagnosis/{id}")
+    public Mono<Diagnosis> updateDiagnosis(
+            @PathVariable Long id,
+            @RequestBody Diagnosis diagnosis,
+            Authentication auth) {
+
+        Long vetId = Long.valueOf(auth.getName());
+        return service.updateDiagnosis(id, diagnosis, vetId);
+    }
+
+    @PreAuthorize("hasRole('VETERINARY','ADMIN')")
+    @PutMapping("/referral/{id}")
+    public Mono<Referral> updateReferral(
+            @PathVariable Long id,
+            @RequestBody Referral referral,
+            Authentication auth) {
+
+        Long vetId = Long.valueOf(auth.getName());
+        return service.updateReferral(id, referral, vetId);
+    }
+
+    @PreAuthorize("hasRole('VETERINARY','ADMIN')")
+    @PutMapping("/treatment/{id}")
+    public Mono<Treatment> updateTreatment(
+            @PathVariable Long id,
+            @RequestBody Treatment treatment,
+            Authentication auth) {
+
+        Long vetId = Long.valueOf(auth.getName());
+        return service.updateTreatment(id, treatment, vetId);
     }
 }

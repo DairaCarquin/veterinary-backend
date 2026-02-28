@@ -29,5 +29,7 @@ public class Appointment {
     private AppointmentStatus status;
     private String reason;
 
+    private Boolean enabled;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

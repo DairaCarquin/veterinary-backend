@@ -16,4 +16,14 @@ public interface VetRepositoryPort {
     Flux<Veterinarian> findByAvailable(Boolean available);
 
     Mono<Veterinarian> findByUserId(Long userId);
+
+    Flux<Veterinarian> search(String name,
+            String specialty,
+            Boolean available,
+            int limit,
+            int offset);
+
+    Mono<Long> countAll();
+
+    Mono<Long> countEnabled();
 }

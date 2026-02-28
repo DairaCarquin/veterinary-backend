@@ -1,5 +1,7 @@
 package com.clinic.vet_service.domain.model;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -10,9 +12,9 @@ import lombok.NoArgsConstructor;
 
 @Table("veterinarians")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Veterinarian {
 
     @Id
@@ -20,11 +22,13 @@ public class Veterinarian {
 
     private Long userId;
     private String username;
-
     private String name;
     private String specialty;
     private String licenseNumber;
     private String email;
-
     private Boolean available;
+
+    private Boolean enabled;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

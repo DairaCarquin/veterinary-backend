@@ -39,4 +39,23 @@ public class R2dbcVetRepositoryAdapter implements VetRepositoryPort {
     public Mono<Veterinarian> findByUserId(Long userId) {
         return repository.findByUserId(userId);
     }
+
+    @Override
+    public Flux<Veterinarian> search(String name,
+            String specialty,
+            Boolean available,
+            int limit,
+            int offset) {
+        return repository.search(name, specialty, available, limit, offset);
+    }
+
+    @Override
+    public Mono<Long> countEnabled() {
+        return repository.countEnabled();
+    }
+
+    @Override
+    public Mono<Long> countAll() {
+        return repository.count();
+    }
 }

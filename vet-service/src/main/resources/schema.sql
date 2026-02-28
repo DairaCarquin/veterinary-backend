@@ -6,5 +6,8 @@ CREATE TABLE IF NOT EXISTS veterinarians (
     specialty VARCHAR(150),
     license_number VARCHAR(100),
     email VARCHAR(150),
-    available BOOLEAN DEFAULT false
+    available BOOLEAN DEFAULT false,
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -14,7 +14,8 @@ CREATE TABLE analysis (
     veterinarian_id BIGINT NOT NULL,
     description TEXT NOT NULL,
     result TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE diagnosis (
@@ -24,7 +25,8 @@ CREATE TABLE diagnosis (
     veterinarian_id BIGINT NOT NULL,
     diagnosis TEXT NOT NULL,
     observations TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE referral (
@@ -34,7 +36,8 @@ CREATE TABLE referral (
     veterinarian_id BIGINT NOT NULL,
     referred_to VARCHAR(255),
     reason TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE treatment (
@@ -44,5 +47,6 @@ CREATE TABLE treatment (
     veterinarian_id BIGINT NOT NULL,
     treatment TEXT NOT NULL,
     indications TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -1,6 +1,8 @@
 package com.clinic.appointment_service.application.service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -58,38 +60,51 @@ public class AppointmentService {
                                                                 saved.getVeterinarianId())));
         }
 
-        public Flux<Appointment> findAll(String role, Long userId) {
+        public Mono<Map<String, Object>> findAll(
+                        String role,
+                        Long userId,
+                        Long petId,
+                        Long veterinarianId,
+                        String status,
+                        LocalDateTime date,
+                        int page,
+                        int size) {
 
-                if (role == null) {
-                        return Flux.error(
-                                        new BusinessException(HttpStatus.UNAUTHORIZED,
-                                                        "Usuario no autenticado"));
-                }
+                int offset = page * size;
 
-                if (role.equals("ADMIN")) {
-                        return repository.findAll()
-                                        .switchIfEmpty(Flux.error(
-                                                        new BusinessException(HttpStatus.NOT_FOUND,
-                                                                        "No existen citas registradas")));
+                Long clientFilter = null;
+                Long vetFilter = null;
+
+                if (role.equals("CLIENT")) {
+                        clientFilter = userId;
                 }
 
                 if (role.equals("VETERINARY")) {
-                        return repository.findByVeterinarianId(userId)
-                                        .switchIfEmpty(Flux.error(
-                                                        new BusinessException(HttpStatus.NOT_FOUND,
-                                                                        "No tiene citas asignadas")));
+                        vetFilter = userId;
                 }
 
-                if (role.equals("CLIENT")) {
-                        return repository.findByClientId(userId)
-                                        .switchIfEmpty(Flux.error(
-                                                        new BusinessException(HttpStatus.NOT_FOUND,
-                                                                        "No tiene citas registradas")));
+                if (role.equals("ADMIN")) {
+                        clientFilter = null;
+                        vetFilter = veterinarianId;
                 }
 
-                return Flux.error(
-                                new BusinessException(HttpStatus.FORBIDDEN,
-                                                "Acceso no permitido"));
+                return repository.search(
+                                clientFilter,
+                                vetFilter,
+                                petId,
+                                status,
+                                size,
+                                offset)
+                                .collectList()
+                                .zipWith(repository.countFiltered(clientFilter, vetFilter))
+                                .map(tuple -> {
+                                        Map<String, Object> response = new HashMap<>();
+                                        response.put("data", tuple.getT1());
+                                        response.put("total", tuple.getT2());
+                                        response.put("page", page);
+                                        response.put("size", size);
+                                        return response;
+                                });
         }
 
         public Flux<Appointment> findByPet(Long petId) {
@@ -180,5 +195,61 @@ public class AppointmentService {
                         throw new BusinessException(HttpStatus.BAD_REQUEST,
                                         "Este estado es final y no puede modificarse");
                 }
+        }
+
+        public Mono<Appointment> reschedule(Long id,
+                        LocalDateTime newDate,
+                        Long newVetId,
+                        String role,
+                        Long userId) {
+
+                return repository.findById(id)
+                                .switchIfEmpty(Mono.error(
+                                                new BusinessException(HttpStatus.NOT_FOUND,
+                                                                "Cita no encontrada")))
+                                .flatMap(appointment -> {
+
+                                        if (role.equals("CLIENT") &&
+                                                        !appointment.getClientId().equals(userId)) {
+                                                return Mono.error(new BusinessException(
+                                                                HttpStatus.FORBIDDEN,
+                                                                "No puede modificar esta cita"));
+                                        }
+
+                                        Long vetToValidate = newVetId != null ? newVetId
+                                                        : appointment.getVeterinarianId();
+
+                                        return repository.countVetConflicts(vetToValidate, newDate)
+                                                        .flatMap(conflicts -> {
+
+                                                                if (conflicts > 0) {
+                                                                        return Mono.error(new BusinessException(
+                                                                                        HttpStatus.BAD_REQUEST,
+                                                                                        "El veterinario ya tiene cita en ese horario"));
+                                                                }
+
+                                                                appointment.setAppointmentDate(newDate);
+
+                                                                if (newVetId != null) {
+                                                                        appointment.setVeterinarianId(newVetId);
+                                                                }
+
+                                                                appointment.setStatus(AppointmentStatus.RESCHEDULED);
+                                                                appointment.setUpdatedAt(LocalDateTime.now());
+
+                                                                return repository.save(appointment);
+                                                        });
+                                });
+        }
+
+        public Mono<Void> toggleEnabled(Long id, boolean enabled) {
+
+                return repository.findById(id)
+                                .flatMap(appointment -> {
+                                        appointment.setEnabled(enabled);
+                                        appointment.setUpdatedAt(LocalDateTime.now());
+                                        return repository.save(appointment);
+                                })
+                                .then();
         }
 }

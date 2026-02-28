@@ -1,5 +1,7 @@
 package com.clinic.appointment_service.infrastructure.adapter.out;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Component;
 
 import com.clinic.appointment_service.domain.model.Appointment;
@@ -11,8 +13,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
-public class R2dbcAppointmentRepositoryAdapter
-        implements AppointmentRepositoryPort {
+public class R2dbcAppointmentRepositoryAdapter implements AppointmentRepositoryPort {
 
     private final R2dbcAppointmentRepository repository;
 
@@ -22,8 +23,13 @@ public class R2dbcAppointmentRepositoryAdapter
     }
 
     @Override
-    public Flux<Appointment> findAll() {
-        return repository.findAll();
+    public Flux<Appointment> search(Long petId,
+            Long clientId,
+            Long veterinarianId,
+            String status,
+            int limit,
+            int offset) {
+        return repository.search(petId, clientId, veterinarianId, status, null, limit, offset);
     }
 
     @Override
@@ -42,7 +48,22 @@ public class R2dbcAppointmentRepositoryAdapter
     }
 
     @Override
+    public Mono<Long> countEnabled() {
+        return repository.countEnabled();
+    }
+
+    @Override
     public Mono<Appointment> findById(Long id) {
         return repository.findById(id);
+    }
+
+    @Override
+    public Mono<Long> countVetConflicts(Long vetId, LocalDateTime date) {
+        return repository.countVetConflicts(vetId, date);
+    }
+
+    @Override
+    public Mono<Long> countFiltered(Long clientId, Long veterinarianId) {
+        return repository.countFiltered(clientId, veterinarianId);
     }
 }

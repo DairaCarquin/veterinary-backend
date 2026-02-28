@@ -6,5 +6,7 @@ CREATE TABLE appointments (
     appointment_date TIMESTAMP NOT NULL,
     status VARCHAR(30) NOT NULL,
     reason TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

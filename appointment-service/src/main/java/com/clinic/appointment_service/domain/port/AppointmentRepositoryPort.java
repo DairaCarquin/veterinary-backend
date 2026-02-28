@@ -1,5 +1,7 @@
 package com.clinic.appointment_service.domain.port;
 
+import java.time.LocalDateTime;
+
 import com.clinic.appointment_service.domain.model.Appointment;
 
 import reactor.core.publisher.Flux;
@@ -7,15 +9,26 @@ import reactor.core.publisher.Mono;
 
 public interface AppointmentRepositoryPort {
 
-    Mono<Appointment> save(Appointment appointment);
+        Mono<Appointment> save(Appointment appointment);
 
-    Flux<Appointment> findAll();
+        Flux<Appointment> search(Long petId,
+                        Long clientId,
+                        Long veterinarianId,
+                        String status,
+                        int limit,
+                        int offset);
 
-    Flux<Appointment> findByClientId(Long clientId);
+        Flux<Appointment> findByClientId(Long clientId);
 
-    Flux<Appointment> findByVeterinarianId(Long veterinarianId);
+        Flux<Appointment> findByVeterinarianId(Long veterinarianId);
 
-    Flux<Appointment> findByPetId(Long petId);
+        Flux<Appointment> findByPetId(Long petId);
 
-    Mono<Appointment> findById(Long id);
+        Mono<Long> countEnabled();
+
+        Mono<Appointment> findById(Long id);
+
+        Mono<Long> countVetConflicts(Long vetId, LocalDateTime date);
+
+        Mono<Long> countFiltered(Long clientId, Long veterinarianId);
 }

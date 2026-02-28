@@ -84,4 +84,64 @@ public class MedicalEventService {
                     return treatmentRepository.save(treatment);
                 }));
     }
+
+    public Mono<Analysis> updateAnalysis(Long id, Analysis updated, Long vetId) {
+
+        return analysisRepository.findById(id)
+                .switchIfEmpty(Mono.error(
+                        new BusinessException(HttpStatus.NOT_FOUND,
+                                "Análisis no encontrado")))
+                .flatMap(existing -> validateCaseAndVet(existing.getMedicalCaseId(), vetId)
+                        .then(Mono.defer(() -> {
+                            existing.setDescription(updated.getDescription());
+                            existing.setResult(updated.getResult());
+                            existing.setUpdatedAt(LocalDateTime.now());
+                            return analysisRepository.save(existing);
+                        })));
+    }
+
+    public Mono<Diagnosis> updateDiagnosis(Long id, Diagnosis updated, Long vetId) {
+
+        return diagnosisRepository.findById(id)
+                .switchIfEmpty(Mono.error(
+                        new BusinessException(HttpStatus.NOT_FOUND,
+                                "Diagnóstico no encontrado")))
+                .flatMap(existing -> validateCaseAndVet(existing.getMedicalCaseId(), vetId)
+                        .then(Mono.defer(() -> {
+                            existing.setDiagnosis(updated.getDiagnosis());
+                            existing.setObservations(updated.getObservations());
+                            existing.setUpdatedAt(LocalDateTime.now());
+                            return diagnosisRepository.save(existing);
+                        })));
+    }
+
+    public Mono<Referral> updateReferral(Long id, Referral updated, Long vetId) {
+
+        return referralRepository.findById(id)
+                .switchIfEmpty(Mono.error(
+                        new BusinessException(HttpStatus.NOT_FOUND,
+                                "Referencia no encontrada")))
+                .flatMap(existing -> validateCaseAndVet(existing.getMedicalCaseId(), vetId)
+                        .then(Mono.defer(() -> {
+                            existing.setReason(updated.getReason());
+                            existing.setReferredTo(updated.getReferredTo());
+                            existing.setUpdatedAt(LocalDateTime.now());
+                            return referralRepository.save(existing);
+                        })));
+    }
+
+    public Mono<Treatment> updateTreatment(Long id, Treatment updated, Long vetId) {
+
+        return treatmentRepository.findById(id)
+                .switchIfEmpty(Mono.error(
+                        new BusinessException(HttpStatus.NOT_FOUND,
+                                "Tratamiento no encontrado")))
+                .flatMap(existing -> validateCaseAndVet(existing.getMedicalCaseId(), vetId)
+                        .then(Mono.defer(() -> {
+                            existing.setTreatment(updated.getTreatment());
+                            existing.setIndications(updated.getIndications());
+                            existing.setUpdatedAt(LocalDateTime.now());
+                            return treatmentRepository.save(existing);
+                        })));
+    }
 }

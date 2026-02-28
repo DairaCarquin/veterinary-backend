@@ -28,4 +28,5 @@ public class Analysis {
     private String result;
 
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

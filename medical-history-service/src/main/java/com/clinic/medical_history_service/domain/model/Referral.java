@@ -28,4 +28,5 @@ public class Referral {
     private String reason;
 
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

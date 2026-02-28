@@ -28,4 +28,5 @@ public class Diagnosis {
     private String observations;
 
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -1,5 +1,9 @@
 package com.clinic.vet_service.application.service;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +35,25 @@ public class VetService {
                                 saved.getSpecialty())));
     }
 
-    public Flux<Veterinarian> findAll() {
-        return repository.findAll();
+    public Mono<Map<String, Object>> findAll(String name,
+            String specialty,
+            Boolean available,
+            int page,
+            int size) {
+
+        int offset = page * size;
+
+        return repository.search(name, specialty, available, size, offset)
+                .collectList()
+                .zipWith(repository.countEnabled())
+                .map(tuple -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("data", tuple.getT1());
+                    response.put("total", tuple.getT2());
+                    response.put("page", page);
+                    response.put("size", size);
+                    return response;
+                });
     }
 
     public Flux<Veterinarian> findAvailable() {
@@ -53,5 +74,15 @@ public class VetService {
 
                     return repository.save(vet);
                 });
+    }
+
+    public Mono<Void> toggleEnabled(Long id, boolean enabled) {
+        return repository.findById(id)
+                .flatMap(vet -> {
+                    vet.setEnabled(enabled);
+                    vet.setUpdatedAt(LocalDateTime.now());
+                    return repository.save(vet);
+                })
+                .then();
     }
 }

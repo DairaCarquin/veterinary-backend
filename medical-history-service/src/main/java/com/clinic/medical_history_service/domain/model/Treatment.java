@@ -28,4 +28,5 @@ public class Treatment {
     private String indications;
 
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
