@@ -23,13 +23,14 @@ public class R2dbcAppointmentRepositoryAdapter implements AppointmentRepositoryP
     }
 
     @Override
-    public Flux<Appointment> search(Long petId,
-            Long clientId,
+    public Flux<Appointment> search(Long clientId,
             Long veterinarianId,
+            Long petId,
             String status,
+            LocalDateTime date,
             int limit,
             int offset) {
-        return repository.search(petId, clientId, veterinarianId, status, null, limit, offset);
+        return repository.search(clientId, veterinarianId, petId, status, date, limit, offset);
     }
 
     @Override
@@ -63,7 +64,7 @@ public class R2dbcAppointmentRepositoryAdapter implements AppointmentRepositoryP
     }
 
     @Override
-    public Mono<Long> countFiltered(Long clientId, Long veterinarianId) {
-        return repository.countFiltered(clientId, veterinarianId);
+    public Mono<Long> countFiltered(Long clientId, Long veterinarianId, Long petId, String status, LocalDateTime date) {
+        return repository.countFiltered(clientId, veterinarianId, petId, status, date);
     }
 }

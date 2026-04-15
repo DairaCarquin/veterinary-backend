@@ -16,5 +16,7 @@ public interface ClientRepositoryPort {
 
     Flux<Client> findByEnabledTrue();
 
-    Flux<Client> findAll(String name, String dni, int limit, int offset);
+    Flux<Client> findAll(String name, String dni, String email, int limit, int offset);
+
+    Mono<Long> countFiltered(String name, String dni, String email);
 }

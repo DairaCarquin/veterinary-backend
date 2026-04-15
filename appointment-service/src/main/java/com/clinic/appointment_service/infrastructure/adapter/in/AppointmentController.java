@@ -20,6 +20,7 @@ import com.clinic.appointment_service.application.dto.request.UpdateAppointmentS
 import com.clinic.appointment_service.application.service.AppointmentService;
 import com.clinic.appointment_service.domain.model.Appointment;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -32,16 +33,9 @@ public class AppointmentController {
 
     @PreAuthorize("hasAnyRole('ADMIN','CLIENT','VETERINARY')")
     @PostMapping
-    public Mono<Appointment> create(
-            @RequestBody Appointment appointment,
-            Authentication authentication) {
-
-        String role = authentication.getAuthorities()
-                .iterator().next().getAuthority()
-                .replace("ROLE_", "");
-
+    public Mono<Appointment> create(@Valid @RequestBody Appointment appointment, Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
         Long userId = Long.valueOf(authentication.getName());
-
         return service.create(appointment, role, userId);
     }
 
@@ -56,68 +50,49 @@ public class AppointmentController {
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
-        String role = authentication.getAuthorities()
-                .iterator().next().getAuthority()
-                .replace("ROLE_", "");
-
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
         Long userId = Long.valueOf(authentication.getName());
 
-        return service.findAll(
-                role,
-                userId,
-                petId,
-                veterinarianId,
-                status,
-                date,
-                page,
-                size);
+        return service.findAll(role, userId, petId, veterinarianId, status, date, page, size);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENT','VETERINARY')")
+    public Mono<Appointment> findById(@PathVariable Long id, Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(authentication.getName());
+        return service.findById(id, role, userId);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
     @PutMapping("/{id}/status")
     public Mono<Appointment> updateStatus(
             @PathVariable Long id,
-            @RequestBody UpdateAppointmentStatusRequest request,
+            @Valid @RequestBody UpdateAppointmentStatusRequest request,
             Authentication authentication) {
 
-        String role = authentication.getAuthorities()
-                .iterator().next()
-                .getAuthority()
-                .replace("ROLE_", "");
-
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
         Long userId = Long.valueOf(authentication.getName());
 
         return service.updateStatus(id, request.getStatus(), role, userId);
     }
 
     @PutMapping("/{id}/reschedule")
-    @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENT','VETERINARY')")
     public Mono<Appointment> reschedule(
             @PathVariable Long id,
-            @RequestBody RescheduleRequest request,
+            @Valid @RequestBody RescheduleRequest request,
             Authentication authentication) {
 
-        String role = authentication.getAuthorities()
-                .iterator().next()
-                .getAuthority()
-                .replace("ROLE_", "");
-
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
         Long userId = Long.valueOf(authentication.getName());
 
-        return service.reschedule(
-                id,
-                request.getNewDate(),
-                request.getNewVeterinarianId(),
-                role,
-                userId);
+        return service.reschedule(id, request.getNewDate(), request.getNewVeterinarianId(), role, userId);
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public Mono<Void> toggle(
-            @PathVariable Long id,
-            @RequestParam boolean enabled) {
-
+    public Mono<Void> toggle(@PathVariable Long id, @RequestParam boolean enabled) {
         return service.toggleEnabled(id, enabled);
     }
 }

@@ -20,10 +20,19 @@ public interface R2dbcRoleRepository
     @Query("""
         SELECT * FROM roles
         WHERE enabled = true
+        AND (:id IS NULL OR id = :id)
         AND (:name IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :name, '%')))
         LIMIT :limit OFFSET :offset
     """)
-    Flux<Role> search(String name, int limit, int offset);
+    Flux<Role> search(Long id, String name, int limit, int offset);
+
+    @Query("""
+        SELECT COUNT(*) FROM roles
+        WHERE enabled = true
+        AND (:id IS NULL OR id = :id)
+        AND (:name IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :name, '%')))
+    """)
+    Mono<Long> countFiltered(Long id, String name);
 
     Mono<Long> count();
 

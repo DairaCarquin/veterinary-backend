@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.clinic.pet_service.application.service.PetService;
 import com.clinic.pet_service.domain.model.Pet;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -28,9 +30,11 @@ public class PetController {
     private final PetService service;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
-    public Mono<Pet> create(@RequestBody Pet pet) {
-        return service.create(pet);
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY','CLIENT')")
+    public Mono<Pet> create(@Valid @RequestBody Pet pet, Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(authentication.getName());
+        return service.create(pet, role, userId);
     }
 
     @GetMapping
@@ -40,11 +44,15 @@ public class PetController {
             @RequestParam(required = false) String species,
             @RequestParam(required = false) Long ownerId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
 
-        return service.findAll(name, species, ownerId, page, size)
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(authentication.getName());
+
+        return service.findAll(name, species, ownerId, role, userId, page, size)
                 .collectList()
-                .zipWith(service.countAll())
+                .zipWith(service.countFiltered(name, species, ownerId, role, userId))
                 .map(tuple -> {
                     Map<String, Object> response = new HashMap<>();
                     response.put("data", tuple.getT1());
@@ -55,16 +63,25 @@ public class PetController {
                 });
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY','CLIENT')")
+    public Mono<Pet> findById(@PathVariable Long id, Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(authentication.getName());
+        return service.findById(id, role, userId);
+    }
+
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
-    public Mono<Pet> update(@PathVariable Long id, @RequestBody Pet pet) {
-        return service.update(id, pet);
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY','CLIENT')")
+    public Mono<Pet> update(@PathVariable Long id, @Valid @RequestBody Pet pet, Authentication authentication) {
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(authentication.getName());
+        return service.update(id, pet, role, userId);
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public Mono<Void> toggle(@PathVariable Long id,
-            @RequestParam boolean enabled) {
+    public Mono<Void> toggle(@PathVariable Long id, @RequestParam boolean enabled) {
         return service.toggleEnabled(id, enabled);
     }
 

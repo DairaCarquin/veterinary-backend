@@ -21,7 +21,17 @@ public interface R2dbcClientRepository extends ReactiveCrudRepository<Client, Lo
         WHERE enabled = true
         AND (:name IS NULL OR LOWER(first_name) LIKE LOWER(CONCAT('%', :name, '%')))
         AND (:dni IS NULL OR dni LIKE CONCAT('%', :dni, '%'))
+        AND (:email IS NULL OR LOWER(email) LIKE LOWER(CONCAT('%', :email, '%')))
         LIMIT :limit OFFSET :offset
     """)
-    Flux<Client> findAll(String name, String dni, int limit, int offset);
+    Flux<Client> findAll(String name, String dni, String email, int limit, int offset);
+
+    @Query("""
+        SELECT COUNT(*) FROM clients 
+        WHERE enabled = true
+        AND (:name IS NULL OR LOWER(first_name) LIKE LOWER(CONCAT('%', :name, '%')))
+        AND (:dni IS NULL OR dni LIKE CONCAT('%', :dni, '%'))
+        AND (:email IS NULL OR LOWER(email) LIKE LOWER(CONCAT('%', :email, '%')))
+    """)
+    Mono<Long> countFiltered(String name, String dni, String email);
 }

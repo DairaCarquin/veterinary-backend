@@ -9,26 +9,28 @@ import reactor.core.publisher.Mono;
 
 public interface AppointmentRepositoryPort {
 
-        Mono<Appointment> save(Appointment appointment);
+    Mono<Appointment> save(Appointment appointment);
 
-        Flux<Appointment> search(Long petId,
-                        Long clientId,
-                        Long veterinarianId,
-                        String status,
-                        int limit,
-                        int offset);
+    Flux<Appointment> search(
+            Long clientId,
+            Long veterinarianId,
+            Long petId,
+            String status,
+            LocalDateTime date,
+            int limit,
+            int offset);
 
-        Flux<Appointment> findByClientId(Long clientId);
+    Flux<Appointment> findByClientId(Long clientId);
 
-        Flux<Appointment> findByVeterinarianId(Long veterinarianId);
+    Flux<Appointment> findByVeterinarianId(Long veterinarianId);
 
-        Flux<Appointment> findByPetId(Long petId);
+    Flux<Appointment> findByPetId(Long petId);
 
-        Mono<Long> countEnabled();
+    Mono<Long> countEnabled();
 
-        Mono<Appointment> findById(Long id);
+    Mono<Appointment> findById(Long id);
 
-        Mono<Long> countVetConflicts(Long vetId, LocalDateTime date);
+    Mono<Long> countVetConflicts(Long vetId, LocalDateTime date);
 
-        Mono<Long> countFiltered(Long clientId, Long veterinarianId);
+    Mono<Long> countFiltered(Long clientId, Long veterinarianId, Long petId, String status, LocalDateTime date);
 }

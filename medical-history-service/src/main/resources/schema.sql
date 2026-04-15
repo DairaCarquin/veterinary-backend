@@ -1,4 +1,4 @@
-CREATE TABLE medical_case (
+CREATE TABLE IF NOT EXISTS medical_case (
     id SERIAL PRIMARY KEY,
     appointment_id BIGINT NOT NULL,
     pet_id BIGINT NOT NULL,
@@ -7,7 +7,7 @@ CREATE TABLE medical_case (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE analysis (
+CREATE TABLE IF NOT EXISTS analysis (
     id SERIAL PRIMARY KEY,
     medical_case_id BIGINT NOT NULL,
     pet_id BIGINT NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE analysis (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE diagnosis (
+CREATE TABLE IF NOT EXISTS diagnosis (
     id SERIAL PRIMARY KEY,
     medical_case_id BIGINT NOT NULL,
     pet_id BIGINT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE diagnosis (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE referral (
+CREATE TABLE IF NOT EXISTS referral (
     id SERIAL PRIMARY KEY,
     medical_case_id BIGINT NOT NULL,
     pet_id BIGINT NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE referral (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE treatment (
+CREATE TABLE IF NOT EXISTS treatment (
     id SERIAL PRIMARY KEY,
     medical_case_id BIGINT NOT NULL,
     pet_id BIGINT NOT NULL,

@@ -87,7 +87,7 @@ ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO users (username, password, enabled, created_at)
 VALUES (
-    'admin@veterinaria.com',
+    'admin@masterdog.com',
     '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG',
     true,
     CURRENT_TIMESTAMP
@@ -97,7 +97,7 @@ VALUES (
 INSERT INTO user_roles (user_id, role_id)
 SELECT u.id, r.id
 FROM users u, roles r
-WHERE u.username = 'admin@veterinaria.com'
+WHERE u.username = 'admin@masterdog.com'
 AND r.name = 'ROLE_ADMIN'
 ON CONFLICT (user_id, role_id) DO NOTHING;
 
@@ -268,7 +268,7 @@ ON CONFLICT (user_id, role_id) DO NOTHING;
 -- DELETE FROM refresh_tokens;
 
 -- Eliminar todos los usuarios excepto admin
--- DELETE FROM users WHERE username != 'admin@veterinaria.com';
+-- DELETE FROM users WHERE username != 'admin@masterdog.com';
 
 -- Resetear secuencias
 -- ALTER SEQUENCE users_id_seq RESTART WITH 1;
@@ -288,7 +288,7 @@ ON CONFLICT (user_id, role_id) DO NOTHING;
    - STRING_AGG → GROUP_CONCAT
 
 3. Los passwords de prueba son:
-   - admin@veterinaria.com → Admin123!
+   - admin@masterdog.com → Admin123!
    - veterinario@test.com → Vet123456
    - cliente@test.com → Cliente123
    - multi.role@test.com → Cliente123

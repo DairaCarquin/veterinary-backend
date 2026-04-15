@@ -22,7 +22,17 @@ public class R2dbcUserRepositoryAdapter implements UserRepositoryPort {
 
     @Override
     public Mono<User> findByUsername(String username) {
-        return repository.findByUsernameAndEnabledTrue(username);
+        return repository.findByUsername(username);
+    }
+
+    @Override
+    public Mono<User> findByDni(String dni) {
+        return repository.findByDni(dni);
+    }
+
+    @Override
+    public Mono<User> findByPhone(String phone) {
+        return repository.findByPhone(phone);
     }
 
     @Override
@@ -43,5 +53,10 @@ public class R2dbcUserRepositoryAdapter implements UserRepositoryPort {
     @Override
     public Mono<Long> countEnabled() {
         return repository.countByEnabledTrue();
+    }
+
+    @Override
+    public Mono<Long> countFiltered(String username, Long roleId) {
+        return repository.countFiltered(username, roleId);
     }
 }

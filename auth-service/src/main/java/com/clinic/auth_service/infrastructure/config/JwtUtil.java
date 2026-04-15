@@ -16,13 +16,15 @@ import io.jsonwebtoken.security.Keys;
 public class JwtUtil {
 
     private final String SECRET = "super-secret-key-clinica-super-secret-key-clinica";
+    private static final long ACCESS_TOKEN_EXPIRATION_MS = 28800000;
+    private static final long REFRESH_TOKEN_EXPIRATION_MS = 604800000;
 
     public String generateToken(User user, String roleName) {
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .claim("scope", "ROLE_" + roleName)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 900000))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_MS))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -37,7 +39,7 @@ public class JwtUtil {
                 .claim("username", user.getUsername())
                 .claim("scope", "ROLE_" + roleName)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 900000))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_MS))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -46,7 +48,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 604800000))
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_MS))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

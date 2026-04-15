@@ -23,6 +23,8 @@ public class User {
     private String username;
     private String password;
     private Long roleId;
+    private String dni;
+    private String phone;
 
     private Boolean enabled;
     private LocalDateTime createdAt;

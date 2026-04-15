@@ -12,4 +12,9 @@ public class VeterinaryCreatedEvent {
     private Long id;
     private String username;
     private String role;
+    private String firstName;
+    private String lastName;
+    private String dni;
+    private String email;
+    private String phone;
 }

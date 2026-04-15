@@ -26,6 +26,11 @@ public class R2dbcVetRepositoryAdapter implements VetRepositoryPort {
     }
 
     @Override
+    public Mono<Veterinarian> findEnabledById(Long id) {
+        return repository.findByIdAndEnabledTrue(id);
+    }
+
+    @Override
     public Flux<Veterinarian> findAll() {
         return repository.findAll();
     }
@@ -47,6 +52,11 @@ public class R2dbcVetRepositoryAdapter implements VetRepositoryPort {
             int limit,
             int offset) {
         return repository.search(name, specialty, available, limit, offset);
+    }
+
+    @Override
+    public Mono<Long> countFiltered(String name, String specialty, Boolean available) {
+        return repository.countFiltered(name, specialty, available);
     }
 
     @Override

@@ -14,6 +14,8 @@ public interface R2dbcVetRepository extends ReactiveCrudRepository<Veterinarian,
 
     Mono<Veterinarian> findByUserId(Long userId);
 
+    Mono<Veterinarian> findByIdAndEnabledTrue(Long id);
+
     @Query("""
                 SELECT * FROM veterinarians
                 WHERE enabled = true
@@ -27,6 +29,15 @@ public interface R2dbcVetRepository extends ReactiveCrudRepository<Veterinarian,
             Boolean available,
             int limit,
             int offset);
+
+    @Query("""
+                SELECT COUNT(*) FROM veterinarians
+                WHERE enabled = true
+                AND (:name IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :name, '%')))
+                AND (:specialty IS NULL OR LOWER(specialty) LIKE LOWER(CONCAT('%', :specialty, '%')))
+                AND (:available IS NULL OR available = :available)
+            """)
+    Mono<Long> countFiltered(String name, String specialty, Boolean available);
 
     @Query("""
                 SELECT COUNT(*) FROM veterinarians

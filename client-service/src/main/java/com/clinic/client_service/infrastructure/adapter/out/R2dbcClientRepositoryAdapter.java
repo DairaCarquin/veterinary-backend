@@ -36,7 +36,12 @@ public class R2dbcClientRepositoryAdapter implements ClientRepositoryPort {
     }
 
     @Override
-    public Flux<Client> findAll(String name, String dni, int limit, int offset) {
-        return repository.findAll(name, dni, limit, offset);
+    public Flux<Client> findAll(String name, String dni, String email, int limit, int offset) {
+        return repository.findAll(name, dni, email, limit, offset);
+    }
+
+    @Override
+    public Mono<Long> countFiltered(String name, String dni, String email) {
+        return repository.countFiltered(name, dni, email);
     }
 }

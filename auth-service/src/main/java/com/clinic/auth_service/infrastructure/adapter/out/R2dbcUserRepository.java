@@ -14,6 +14,10 @@ public interface R2dbcUserRepository extends ReactiveCrudRepository<User, Long> 
 
     Mono<User> findByUsername(String username);
 
+    Mono<User> findByDni(String dni);
+
+    Mono<User> findByPhone(String phone);
+
     Mono<User> findByUsernameAndEnabledTrue(String username);
 
     @Query("""
@@ -24,6 +28,14 @@ public interface R2dbcUserRepository extends ReactiveCrudRepository<User, Long> 
                 LIMIT :limit OFFSET :offset
             """)
     Flux<User> search(String username, Long roleId, int limit, int offset);
+
+    @Query("""
+                SELECT COUNT(*) FROM users
+                WHERE enabled = true
+                AND (:username IS NULL OR LOWER(username) LIKE LOWER(CONCAT('%', :username, '%')))
+                AND (:roleId IS NULL OR role_id = :roleId)
+            """)
+    Mono<Long> countFiltered(String username, Long roleId);
 
     Mono<Long> count();
 

@@ -11,6 +11,10 @@ public interface UserRepositoryPort {
 
     Mono<User> findByUsername(String username);
 
+    Mono<User> findByDni(String dni);
+
+    Mono<User> findByPhone(String phone);
+
     Mono<User> findById(Long id);
 
     Flux<User> search(String username, Long roleId, int limit, int offset);
@@ -18,4 +22,6 @@ public interface UserRepositoryPort {
     Mono<Long> countAll();
 
     Mono<Long> countEnabled();
+
+    Mono<Long> countFiltered(String username, Long roleId);
 }

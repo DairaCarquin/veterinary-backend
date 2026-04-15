@@ -85,6 +85,7 @@ public class MedicalEventController {
                 size);
     }
 
+    @PreAuthorize("hasRole('VETERINARY')")
     @PostMapping("/analysis")
     public Mono<Analysis> createAnalysis(
             @RequestBody Analysis analysis,
@@ -111,6 +112,7 @@ public class MedicalEventController {
                 size);
     }
 
+    @PreAuthorize("hasRole('VETERINARY')")
     @PostMapping("/referral")
     public Mono<Referral> createReferral(
             @RequestBody Referral referral,
@@ -137,6 +139,7 @@ public class MedicalEventController {
                 size);
     }
 
+    @PreAuthorize("hasRole('VETERINARY')")
     @PostMapping("/treatment")
     public Mono<Treatment> createTreatment(
             @RequestBody Treatment treatment,
@@ -146,7 +149,7 @@ public class MedicalEventController {
         return service.createTreatment(treatment, vetId);
     }
 
-    @PreAuthorize("hasRole('VETERINARY','ADMIN')")
+    @PreAuthorize("hasAnyRole('VETERINARY','ADMIN')")
     @PutMapping("/analysis/{id}")
     public Mono<Analysis> updateAnalysis(
             @PathVariable Long id,
@@ -157,7 +160,7 @@ public class MedicalEventController {
         return service.updateAnalysis(id, analysis, vetId);
     }
 
-    @PreAuthorize("hasRole('VETERINARY','ADMIN')")
+    @PreAuthorize("hasAnyRole('VETERINARY','ADMIN')")
     @PutMapping("/diagnosis/{id}")
     public Mono<Diagnosis> updateDiagnosis(
             @PathVariable Long id,
@@ -168,7 +171,7 @@ public class MedicalEventController {
         return service.updateDiagnosis(id, diagnosis, vetId);
     }
 
-    @PreAuthorize("hasRole('VETERINARY','ADMIN')")
+    @PreAuthorize("hasAnyRole('VETERINARY','ADMIN')")
     @PutMapping("/referral/{id}")
     public Mono<Referral> updateReferral(
             @PathVariable Long id,
@@ -179,7 +182,7 @@ public class MedicalEventController {
         return service.updateReferral(id, referral, vetId);
     }
 
-    @PreAuthorize("hasRole('VETERINARY','ADMIN')")
+    @PreAuthorize("hasAnyRole('VETERINARY','ADMIN')")
     @PutMapping("/treatment/{id}")
     public Mono<Treatment> updateTreatment(
             @PathVariable Long id,

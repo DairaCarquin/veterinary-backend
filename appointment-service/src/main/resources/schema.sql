@@ -1,4 +1,4 @@
-CREATE TABLE appointments (
+CREATE TABLE IF NOT EXISTS appointments (
     id SERIAL PRIMARY KEY,
     pet_id BIGINT NOT NULL,
     client_id BIGINT NOT NULL,

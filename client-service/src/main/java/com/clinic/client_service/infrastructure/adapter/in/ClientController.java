@@ -2,6 +2,7 @@ package com.clinic.client_service.infrastructure.adapter.in;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,15 +43,31 @@ public class ClientController {
     public Mono<ApiResponse<List<Client>>> findAll(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String dni,
+            @RequestParam(required = false) String email,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        return service.findAll(name, dni, page, size)
+        return service.findAll(name, dni, email, page, size)
                 .collectList()
-                .map(list -> ApiResponse.<List<Client>>builder()
+                .zipWith(service.countFiltered(name, dni, email))
+                .map(tuple -> ApiResponse.<List<Client>>builder()
                         .status(200)
                         .description("Lista paginada de clientes")
-                        .data(list)
+                        .data(tuple.getT1())
+                        .total(tuple.getT2())
+                        .page(page)
+                        .size(size)
+                        .build());
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Mono<ApiResponse<Client>> findById(@PathVariable Long id) {
+        return service.findById(id)
+                .map(client -> ApiResponse.<Client>builder()
+                        .status(200)
+                        .description("Cliente encontrado")
+                        .data(client)
                         .build());
     }
 
@@ -58,7 +75,7 @@ public class ClientController {
     @PreAuthorize("hasRole('ADMIN')")
     public Mono<ApiResponse<Client>> update(
             @PathVariable Long id,
-            @RequestBody Client client) {
+            @Valid @RequestBody Client client) {
         return service.update(id, client)
                 .map(updated -> ApiResponse.<Client>builder()
                         .status(200)

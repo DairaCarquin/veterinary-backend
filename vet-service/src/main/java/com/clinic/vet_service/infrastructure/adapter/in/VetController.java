@@ -3,6 +3,7 @@ package com.clinic.vet_service.infrastructure.adapter.in;
 import java.util.Map;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,7 @@ import com.clinic.vet_service.application.dto.request.UpdateVetRequest;
 import com.clinic.vet_service.application.service.VetService;
 import com.clinic.vet_service.domain.model.Veterinarian;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -39,19 +41,28 @@ public class VetController {
         return service.findAll(name, specialty, available, page, size);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CLIENT','VETERINARY')")
+    public Mono<Veterinarian> findById(@PathVariable Long id) {
+        return service.findById(id);
+    }
+
     @PreAuthorize("hasAnyRole('ADMIN','CLIENT')")
     @GetMapping("/available")
     public Flux<Veterinarian> findAvailable() {
         return service.findAvailable();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
     @PutMapping("/{userId}")
     public Mono<Veterinarian> update(
             @PathVariable Long userId,
-            @RequestBody UpdateVetRequest request) {
+            @Valid @RequestBody UpdateVetRequest request,
+            Authentication authentication) {
 
-        return service.update(userId, request);
+        String role = authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long authenticatedUserId = Long.valueOf(authentication.getName());
+        return service.update(userId, request, role, authenticatedUserId);
     }
 
     @PatchMapping("/{id}/status")

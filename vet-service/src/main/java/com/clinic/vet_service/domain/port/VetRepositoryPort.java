@@ -11,6 +11,8 @@ public interface VetRepositoryPort {
 
     Mono<Veterinarian> findById(Long id);
 
+    Mono<Veterinarian> findEnabledById(Long id);
+
     Flux<Veterinarian> findAll();
 
     Flux<Veterinarian> findByAvailable(Boolean available);
@@ -22,6 +24,8 @@ public interface VetRepositoryPort {
             Boolean available,
             int limit,
             int offset);
+
+    Mono<Long> countFiltered(String name, String specialty, Boolean available);
 
     Mono<Long> countAll();
 

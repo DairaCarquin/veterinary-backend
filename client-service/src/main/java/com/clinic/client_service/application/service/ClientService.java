@@ -25,6 +25,10 @@ public class ClientService {
         return repository.count();
     }
 
+    public Mono<Client> findById(Long id) {
+        return repository.findById(id);
+    }
+
     public Mono<Client> update(Long id, Client updated) {
         return repository.findById(id)
                 .flatMap(existing -> {
@@ -48,8 +52,12 @@ public class ClientService {
                 .then();
     }
 
-    public Flux<Client> findAll(String name, String dni, int page, int size) {
+    public Flux<Client> findAll(String name, String dni, String email, int page, int size) {
         int offset = page * size;
-        return repository.findAll(name, dni, size, offset);
+        return repository.findAll(name, dni, email, size, offset);
+    }
+
+    public Mono<Long> countFiltered(String name, String dni, String email) {
+        return repository.countFiltered(name, dni, email);
     }
 }

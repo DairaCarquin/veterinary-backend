@@ -13,6 +13,8 @@ public interface R2dbcPetRepository
 
     Flux<Pet> findByOwnerId(Long ownerId);
 
+    Flux<Pet> findByOwnerIdAndEnabledTrue(Long ownerId);
+
         @Query("""
         SELECT * FROM pets
         WHERE enabled = true
@@ -22,6 +24,15 @@ public interface R2dbcPetRepository
         LIMIT :limit OFFSET :offset
     """)
     Flux<Pet> search(String name, String species, Long ownerId, int limit, int offset);
+
+    @Query("""
+        SELECT COUNT(*) FROM pets
+        WHERE enabled = true
+        AND (:name IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :name, '%')))
+        AND (:species IS NULL OR LOWER(species) LIKE LOWER(CONCAT('%', :species, '%')))
+        AND (:ownerId IS NULL OR owner_id = :ownerId)
+    """)
+    Mono<Long> countFiltered(String name, String species, Long ownerId);
 
     Mono<Long> count();
 

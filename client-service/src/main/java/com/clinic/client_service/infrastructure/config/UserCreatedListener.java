@@ -25,6 +25,12 @@ public class UserCreatedListener {
         Client client = Client.builder()
                 .userId(event.getId())
                 .username(event.getUsername())
+                .firstName(event.getFirstName())
+                .lastName(event.getLastName())
+                .dni(event.getDni())
+                .email(event.getEmail())
+                .phone(event.getPhone())
+                .enabled(true)
                 .build();
 
         repository.save(client).subscribe();

@@ -26,7 +26,13 @@ public class VeterinaryCreatedListener {
             Veterinarian vet = Veterinarian.builder()
                     .userId(event.getId())
                     .username(event.getUsername())
+                    .name(event.getFirstName())
+                    .lastName(event.getLastName())
+                    .dni(event.getDni())
+                    .email(event.getEmail())
+                    .phone(event.getPhone())
                     .available(false)
+                    .enabled(true)
                     .build();
 
             repository.save(vet).subscribe();
