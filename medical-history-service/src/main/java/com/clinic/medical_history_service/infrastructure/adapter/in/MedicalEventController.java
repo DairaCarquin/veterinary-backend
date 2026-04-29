@@ -30,123 +30,127 @@ public class MedicalEventController {
     private final MedicalEventService service;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY','CLIENT')")
     public Mono<Map<String, Object>> findAll(
             @RequestParam(required = false) Long appointmentId,
             @RequestParam(required = false) Long petId,
             @RequestParam(required = false) Long veterinarianId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            Authentication auth) {
 
-        return service.findAll(appointmentId, petId, veterinarianId, page, size);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+
+        return service.findAll(role, userId, appointmentId, petId, veterinarianId, page, size);
     }
 
     @GetMapping("/diagnosis")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY','CLIENT')")
     public Mono<Map<String, Object>> listDiagnosis(
             @RequestParam(required = false) Long medicalCaseId,
             @RequestParam(required = false) Long petId,
             @RequestParam(required = false) Long veterinarianId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            Authentication auth) {
 
-        return service.listDiagnosis(
-                medicalCaseId,
-                petId,
-                veterinarianId,
-                page,
-                size);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+
+        return service.listDiagnosis(role, userId, medicalCaseId, petId, veterinarianId, page, size);
     }
 
-    @PreAuthorize("hasRole('VETERINARY')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
     @PostMapping("/diagnosis")
     public Mono<Diagnosis> createDiagnosis(
             @RequestBody Diagnosis diagnosis,
             Authentication auth) {
 
-        Long vetId = Long.valueOf(auth.getName());
-        return service.createDiagnosis(diagnosis, vetId);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+        return service.createDiagnosis(diagnosis, role, userId);
     }
 
     @GetMapping("/analysis")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY','CLIENT')")
     public Mono<Map<String, Object>> listAnalysis(
             @RequestParam(required = false) Long medicalCaseId,
             @RequestParam(required = false) Long petId,
             @RequestParam(required = false) Long veterinarianId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            Authentication auth) {
 
-        return service.listAnalysis(
-                medicalCaseId,
-                petId,
-                veterinarianId,
-                page,
-                size);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+
+        return service.listAnalysis(role, userId, medicalCaseId, petId, veterinarianId, page, size);
     }
 
-    @PreAuthorize("hasRole('VETERINARY')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
     @PostMapping("/analysis")
     public Mono<Analysis> createAnalysis(
             @RequestBody Analysis analysis,
             Authentication auth) {
 
-        Long vetId = Long.valueOf(auth.getName());
-        return service.createAnalysis(analysis, vetId);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+        return service.createAnalysis(analysis, role, userId);
     }
 
     @GetMapping("/referral")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY','CLIENT')")
     public Mono<Map<String, Object>> listReferral(
             @RequestParam(required = false) Long medicalCaseId,
             @RequestParam(required = false) Long petId,
             @RequestParam(required = false) Long veterinarianId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            Authentication auth) {
 
-        return service.listReferral(
-                medicalCaseId,
-                petId,
-                veterinarianId,
-                page,
-                size);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+
+        return service.listReferral(role, userId, medicalCaseId, petId, veterinarianId, page, size);
     }
 
-    @PreAuthorize("hasRole('VETERINARY')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
     @PostMapping("/referral")
     public Mono<Referral> createReferral(
             @RequestBody Referral referral,
             Authentication auth) {
 
-        Long vetId = Long.valueOf(auth.getName());
-        return service.createReferral(referral, vetId);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+        return service.createReferral(referral, role, userId);
     }
 
     @GetMapping("/treatment")
-    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY','CLIENT')")
     public Mono<Map<String, Object>> listTreatment(
             @RequestParam(required = false) Long medicalCaseId,
             @RequestParam(required = false) Long petId,
             @RequestParam(required = false) Long veterinarianId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            Authentication auth) {
 
-        return service.listTreatment(
-                medicalCaseId,
-                petId,
-                veterinarianId,
-                page,
-                size);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+
+        return service.listTreatment(role, userId, medicalCaseId, petId, veterinarianId, page, size);
     }
 
-    @PreAuthorize("hasRole('VETERINARY')")
+    @PreAuthorize("hasAnyRole('ADMIN','VETERINARY')")
     @PostMapping("/treatment")
     public Mono<Treatment> createTreatment(
             @RequestBody Treatment treatment,
             Authentication auth) {
 
-        Long vetId = Long.valueOf(auth.getName());
-        return service.createTreatment(treatment, vetId);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+        return service.createTreatment(treatment, role, userId);
     }
 
     @PreAuthorize("hasAnyRole('VETERINARY','ADMIN')")
@@ -156,8 +160,9 @@ public class MedicalEventController {
             @RequestBody Analysis analysis,
             Authentication auth) {
 
-        Long vetId = Long.valueOf(auth.getName());
-        return service.updateAnalysis(id, analysis, vetId);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+        return service.updateAnalysis(id, analysis, role, userId);
     }
 
     @PreAuthorize("hasAnyRole('VETERINARY','ADMIN')")
@@ -167,8 +172,9 @@ public class MedicalEventController {
             @RequestBody Diagnosis diagnosis,
             Authentication auth) {
 
-        Long vetId = Long.valueOf(auth.getName());
-        return service.updateDiagnosis(id, diagnosis, vetId);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+        return service.updateDiagnosis(id, diagnosis, role, userId);
     }
 
     @PreAuthorize("hasAnyRole('VETERINARY','ADMIN')")
@@ -178,8 +184,9 @@ public class MedicalEventController {
             @RequestBody Referral referral,
             Authentication auth) {
 
-        Long vetId = Long.valueOf(auth.getName());
-        return service.updateReferral(id, referral, vetId);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+        return service.updateReferral(id, referral, role, userId);
     }
 
     @PreAuthorize("hasAnyRole('VETERINARY','ADMIN')")
@@ -189,7 +196,8 @@ public class MedicalEventController {
             @RequestBody Treatment treatment,
             Authentication auth) {
 
-        Long vetId = Long.valueOf(auth.getName());
-        return service.updateTreatment(id, treatment, vetId);
+        String role = auth.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "");
+        Long userId = Long.valueOf(auth.getName());
+        return service.updateTreatment(id, treatment, role, userId);
     }
 }

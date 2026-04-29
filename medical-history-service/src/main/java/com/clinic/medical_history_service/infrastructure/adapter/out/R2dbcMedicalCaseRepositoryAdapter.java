@@ -33,18 +33,25 @@ public class R2dbcMedicalCaseRepositoryAdapter implements MedicalCaseRepositoryP
     @Override
     public Flux<MedicalCase> search(
             Long appointmentId,
+            Long clientId,
             Long petId,
             Long veterinarianId,
             int limit,
             int offset) {
-        return repository.search(appointmentId, petId, veterinarianId, limit, offset);
+        return repository.search(appointmentId, clientId, petId, veterinarianId, limit, offset);
     }
 
     @Override
     public Mono<Long> countFiltered(
             Long appointmentId,
+            Long clientId,
             Long petId,
             Long veterinarianId) {
-        return repository.countFiltered(appointmentId, petId, veterinarianId);
+        return repository.countFiltered(appointmentId, clientId, petId, veterinarianId);
+    }
+
+    @Override
+    public Mono<Long> findClientIdByUserId(Long userId) {
+        return repository.findClientIdByUserId(userId);
     }
 }

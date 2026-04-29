@@ -37,4 +37,12 @@ public interface R2dbcPetRepository
     Mono<Long> count();
 
     Mono<Long> countByEnabledTrue();
+
+    @Query("""
+        SELECT id FROM clients
+        WHERE user_id = :userId
+        AND enabled = true
+        LIMIT 1
+    """)
+    Mono<Long> findClientIdByUserId(Long userId);
 }

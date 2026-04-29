@@ -15,28 +15,34 @@ public interface R2dbcDiagnosisRepository extends ReactiveCrudRepository<Diagnos
     Flux<Diagnosis> findByPetId(Long petId);
 
     @Query("""
-            SELECT * FROM diagnosis
-            WHERE (:caseId IS NULL OR medical_case_id = :caseId)
-            AND (:petId IS NULL OR pet_id = :petId)
-            AND (:vetId IS NULL OR veterinarian_id = :vetId)
+            SELECT d.* FROM diagnosis d
+            INNER JOIN medical_case mc ON mc.id = d.medical_case_id
+            WHERE (:caseId IS NULL OR d.medical_case_id = :caseId)
+            AND (:clientId IS NULL OR mc.client_id = :clientId)
+            AND (:petId IS NULL OR d.pet_id = :petId)
+            AND (:vetId IS NULL OR d.veterinarian_id = :vetId)
             ORDER BY created_at DESC
             LIMIT :limit OFFSET :offset
             """)
     Flux<Diagnosis> search(
             Long caseId,
+            Long clientId,
             Long petId,
             Long vetId,
             int limit,
             int offset);
 
     @Query("""
-            SELECT COUNT(*) FROM diagnosis
-            WHERE (:caseId IS NULL OR medical_case_id = :caseId)
-            AND (:petId IS NULL OR pet_id = :petId)
-            AND (:vetId IS NULL OR veterinarian_id = :vetId)
+            SELECT COUNT(*) FROM diagnosis d
+            INNER JOIN medical_case mc ON mc.id = d.medical_case_id
+            WHERE (:caseId IS NULL OR d.medical_case_id = :caseId)
+            AND (:clientId IS NULL OR mc.client_id = :clientId)
+            AND (:petId IS NULL OR d.pet_id = :petId)
+            AND (:vetId IS NULL OR d.veterinarian_id = :vetId)
             """)
     Mono<Long> countFiltered(
             Long caseId,
+            Long clientId,
             Long petId,
             Long vetId);
 }

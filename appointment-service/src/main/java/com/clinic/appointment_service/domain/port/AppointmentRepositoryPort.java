@@ -30,7 +30,9 @@ public interface AppointmentRepositoryPort {
 
     Mono<Appointment> findById(Long id);
 
-    Mono<Long> countVetConflicts(Long vetId, LocalDateTime date);
+    Mono<Long> countVetConflicts(Long vetId, LocalDateTime startDate, LocalDateTime endDate, Long excludedAppointmentId);
 
     Mono<Long> countFiltered(Long clientId, Long veterinarianId, Long petId, String status, LocalDateTime date);
+
+    Mono<Long> findClientIdByUserId(Long userId);
 }

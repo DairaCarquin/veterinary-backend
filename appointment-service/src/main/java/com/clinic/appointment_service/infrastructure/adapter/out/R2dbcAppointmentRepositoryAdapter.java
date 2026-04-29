@@ -59,12 +59,17 @@ public class R2dbcAppointmentRepositoryAdapter implements AppointmentRepositoryP
     }
 
     @Override
-    public Mono<Long> countVetConflicts(Long vetId, LocalDateTime date) {
-        return repository.countVetConflicts(vetId, date);
+    public Mono<Long> countVetConflicts(Long vetId, LocalDateTime startDate, LocalDateTime endDate, Long excludedAppointmentId) {
+        return repository.countVetConflicts(vetId, startDate, endDate, excludedAppointmentId);
     }
 
     @Override
     public Mono<Long> countFiltered(Long clientId, Long veterinarianId, Long petId, String status, LocalDateTime date) {
         return repository.countFiltered(clientId, veterinarianId, petId, status, date);
+    }
+
+    @Override
+    public Mono<Long> findClientIdByUserId(Long userId) {
+        return repository.findClientIdByUserId(userId);
     }
 }

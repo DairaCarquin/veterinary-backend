@@ -54,4 +54,9 @@ public class R2dbcPetRepositoryAdapter implements PetRepositoryPort {
     public Mono<Long> countEnabled() {
         return repository.countByEnabledTrue();
     }
+
+    @Override
+    public Mono<Long> findClientIdByUserId(Long userId) {
+        return repository.findClientIdByUserId(userId);
+    }
 }

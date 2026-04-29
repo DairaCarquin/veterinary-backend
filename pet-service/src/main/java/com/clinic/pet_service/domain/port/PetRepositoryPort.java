@@ -23,4 +23,6 @@ public interface PetRepositoryPort {
 
     Mono<Long> countEnabled();
 
+    Mono<Long> findClientIdByUserId(Long userId);
+
 }

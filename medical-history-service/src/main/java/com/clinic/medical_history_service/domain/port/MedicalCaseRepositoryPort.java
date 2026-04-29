@@ -15,6 +15,7 @@ public interface MedicalCaseRepositoryPort {
 
     Flux<MedicalCase> search(
             Long appointmentId,
+            Long clientId,
             Long petId,
             Long veterinarianId,
             int limit,
@@ -22,6 +23,9 @@ public interface MedicalCaseRepositoryPort {
 
     Mono<Long> countFiltered(
             Long appointmentId,
+            Long clientId,
             Long petId,
             Long veterinarianId);
+
+    Mono<Long> findClientIdByUserId(Long userId);
 }

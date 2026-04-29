@@ -26,6 +26,7 @@ public interface R2dbcAppointmentRepository extends ReactiveCrudRepository<Appoi
                         AND (:petId IS NULL OR pet_id = :petId)
                         AND (:status IS NULL OR status = :status)
                         AND (:date IS NULL OR DATE(appointment_date) = DATE(:date))
+                        ORDER BY appointment_date ASC
                         LIMIT :limit OFFSET :offset
                         """)
     Flux<Appointment> search(Long clientId,
@@ -45,9 +46,12 @@ public interface R2dbcAppointmentRepository extends ReactiveCrudRepository<Appoi
                         SELECT COUNT(*) FROM appointments
                         WHERE veterinarian_id = :vetId
                         AND enabled = true
-                        AND appointment_date = :date
+                        AND status <> 'CANCELLED'
+                        AND (:excludedAppointmentId IS NULL OR id <> :excludedAppointmentId)
+                        AND appointment_date < :endDate
+                        AND appointment_date + INTERVAL '35 minutes' > :startDate
                         """)
-        Mono<Long> countVetConflicts(Long vetId, LocalDateTime date);
+        Mono<Long> countVetConflicts(Long vetId, LocalDateTime startDate, LocalDateTime endDate, Long excludedAppointmentId);
 
     @Query("""
                         SELECT COUNT(*) FROM appointments
@@ -63,4 +67,12 @@ public interface R2dbcAppointmentRepository extends ReactiveCrudRepository<Appoi
                         Long petId,
                         String status,
                         LocalDateTime date);
+
+        @Query("""
+                        SELECT id FROM clients
+                        WHERE user_id = :userId
+                        AND enabled = true
+                        LIMIT 1
+                        """)
+        Mono<Long> findClientIdByUserId(Long userId);
 }

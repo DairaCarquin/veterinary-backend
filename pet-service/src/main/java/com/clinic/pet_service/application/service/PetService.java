@@ -22,12 +22,24 @@ public class PetService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public Mono<Pet> create(Pet pet, String role, Long authenticatedUserId) {
-        if ("CLIENT".equals(role) && !authenticatedUserId.equals(pet.getOwnerId())) {
-            return Mono.error(new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "No puede registrar mascotas para otro cliente"));
+        if ("CLIENT".equals(role)) {
+            return resolveClientId(authenticatedUserId)
+                    .flatMap(clientId -> {
+                        if (pet.getOwnerId() != null && !clientId.equals(pet.getOwnerId())) {
+                            return Mono.error(new org.springframework.web.server.ResponseStatusException(
+                                    HttpStatus.FORBIDDEN,
+                                    "No puede registrar mascotas para otro cliente"));
+                        }
+
+                        pet.setOwnerId(clientId);
+                        return saveNewPet(pet);
+                    });
         }
 
+        return saveNewPet(pet);
+    }
+
+    private Mono<Pet> saveNewPet(Pet pet) {
         pet.setEnabled(true);
         pet.setCreatedAt(LocalDateTime.now());
 
@@ -44,26 +56,45 @@ public class PetService {
                 .switchIfEmpty(Mono.error(new org.springframework.web.server.ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Mascota no encontrada")))
-                .flatMap(pet -> {
-                    if ("CLIENT".equals(role) && !authenticatedUserId.equals(pet.getOwnerId())) {
+                .flatMap(pet -> validateClientOwnership(pet, role, authenticatedUserId).thenReturn(pet));
+    }
+
+    private Mono<Void> validateClientOwnership(Pet pet, String role, Long authenticatedUserId) {
+        if (!"CLIENT".equals(role)) {
+            return Mono.empty();
+        }
+
+        return resolveClientId(authenticatedUserId)
+                .flatMap(clientId -> {
+                    if (!clientId.equals(pet.getOwnerId())) {
                         return Mono.error(new org.springframework.web.server.ResponseStatusException(
                                 HttpStatus.FORBIDDEN,
                                 "No puede consultar mascotas de otro cliente"));
                     }
-                    return Mono.just(pet);
+
+                    return Mono.empty();
                 });
     }
 
     public Flux<Pet> findAll(String name, String species, Long ownerId, String role, Long authenticatedUserId, int page,
             int size) {
         int offset = page * size;
-        Long resolvedOwnerId = "CLIENT".equals(role) ? authenticatedUserId : ownerId;
+        if ("CLIENT".equals(role)) {
+            return resolveClientId(authenticatedUserId)
+                    .flatMapMany(clientId -> repository.findAll(name, species, clientId, size, offset));
+        }
+
+        Long resolvedOwnerId = ownerId;
         return repository.findAll(name, species, resolvedOwnerId, size, offset);
     }
 
     public Mono<Long> countFiltered(String name, String species, Long ownerId, String role, Long authenticatedUserId) {
-        Long resolvedOwnerId = "CLIENT".equals(role) ? authenticatedUserId : ownerId;
-        return repository.countFiltered(name, species, resolvedOwnerId);
+        if ("CLIENT".equals(role)) {
+            return resolveClientId(authenticatedUserId)
+                    .flatMap(clientId -> repository.countFiltered(name, species, clientId));
+        }
+
+        return repository.countFiltered(name, species, ownerId);
     }
 
     public Mono<Pet> update(Long id, Pet updated, String role, Long authenticatedUserId) {
@@ -72,18 +103,15 @@ public class PetService {
                         HttpStatus.NOT_FOUND,
                         "Mascota no encontrada")))
                 .flatMap(existing -> {
-                    if ("CLIENT".equals(role) && !authenticatedUserId.equals(existing.getOwnerId())) {
-                        return Mono.error(new org.springframework.web.server.ResponseStatusException(
-                                HttpStatus.FORBIDDEN,
-                                "No puede actualizar mascotas de otro cliente"));
-                    }
-
-                    existing.setName(updated.getName());
-                    existing.setSpecies(updated.getSpecies());
-                    existing.setBreed(updated.getBreed());
-                    existing.setAge(updated.getAge());
-                    existing.setUpdatedAt(LocalDateTime.now());
-                    return repository.save(existing);
+                    return validateClientOwnership(existing, role, authenticatedUserId)
+                            .then(Mono.defer(() -> {
+                                existing.setName(updated.getName());
+                                existing.setSpecies(updated.getSpecies());
+                                existing.setBreed(updated.getBreed());
+                                existing.setAge(updated.getAge());
+                                existing.setUpdatedAt(LocalDateTime.now());
+                                return repository.save(existing);
+                            }));
                 });
     }
 
@@ -114,5 +142,12 @@ public class PetService {
 
     public Mono<Long> countAll() {
         return repository.countAll();
+    }
+
+    private Mono<Long> resolveClientId(Long userId) {
+        return repository.findClientIdByUserId(userId)
+                .switchIfEmpty(Mono.error(new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "No existe un cliente asociado al usuario autenticado")));
     }
 }

@@ -23,14 +23,28 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class AppointmentService {
 
+    private static final long APPOINTMENT_BLOCK_MINUTES = 35L;
+
     private final AppointmentRepositoryPort repository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public Mono<Appointment> create(Appointment appointment, String role, Long authenticatedUserId) {
-        if ("CLIENT".equals(role) && !appointment.getClientId().equals(authenticatedUserId)) {
-            return Mono.error(new BusinessException(HttpStatus.FORBIDDEN, "No puede crear citas para otro cliente"));
+        if ("CLIENT".equals(role)) {
+            return resolveClientId(authenticatedUserId)
+                    .flatMap(clientId -> {
+                        if (appointment.getClientId() != null && !clientId.equals(appointment.getClientId())) {
+                            return Mono.error(new BusinessException(HttpStatus.FORBIDDEN, "No puede crear citas para otro cliente"));
+                        }
+
+                        appointment.setClientId(clientId);
+                        return createForResolvedClient(appointment);
+                    });
         }
 
+        return createForResolvedClient(appointment);
+    }
+
+    private Mono<Appointment> createForResolvedClient(Appointment appointment) {
         if (appointment.getAppointmentDate().isBefore(LocalDateTime.now())) {
             return Mono.error(new BusinessException(HttpStatus.BAD_REQUEST, "La cita debe programarse en el futuro"));
         }
@@ -39,23 +53,15 @@ public class AppointmentService {
         appointment.setEnabled(true);
         appointment.setCreatedAt(LocalDateTime.now());
 
-        return repository.countVetConflicts(appointment.getVeterinarianId(), appointment.getAppointmentDate())
-                .flatMap(conflicts -> {
-                    if (conflicts > 0) {
-                        return Mono.error(new BusinessException(
-                                HttpStatus.BAD_REQUEST,
-                                "El veterinario ya tiene una cita en ese horario"));
-                    }
-
-                    return repository.save(appointment)
-                            .doOnSuccess(saved -> kafkaTemplate.send(
-                                    "appointment-created-topic",
-                                    new AppointmentCreatedEvent(
-                                            saved.getId(),
-                                            saved.getPetId(),
-                                            saved.getClientId(),
-                                            saved.getVeterinarianId())));
-                });
+        return validateVetAvailability(appointment.getVeterinarianId(), appointment.getAppointmentDate(), null)
+                .then(repository.save(appointment)
+                        .doOnSuccess(saved -> kafkaTemplate.send(
+                                "appointment-created-topic",
+                                new AppointmentCreatedEvent(
+                                        saved.getId(),
+                                        saved.getPetId(),
+                                        saved.getClientId(),
+                                        saved.getVeterinarianId()))));
     }
 
     public Mono<Appointment> findById(Long id, String role, Long userId) {
@@ -78,9 +84,25 @@ public class AppointmentService {
 
         int offset = page * size;
 
-        Long clientFilter = "CLIENT".equals(role) ? userId : null;
         Long vetFilter = "VETERINARY".equals(role) ? userId : veterinarianId;
 
+        if ("CLIENT".equals(role)) {
+            return resolveClientId(userId)
+                    .flatMap(clientId -> buildSearchResponse(clientId, vetFilter, petId, status, date, page, size, offset));
+        }
+
+        Long clientFilter = null;
+        return buildSearchResponse(clientFilter, vetFilter, petId, status, date, page, size, offset);
+    }
+
+    private Mono<Map<String, Object>> buildSearchResponse(Long clientFilter,
+            Long vetFilter,
+            Long petId,
+            String status,
+            LocalDateTime date,
+            int page,
+            int size,
+            int offset) {
         return repository.search(clientFilter, vetFilter, petId, status, date, size, offset)
                 .collectList()
                 .zipWith(repository.countFiltered(clientFilter, vetFilter, petId, status, date))
@@ -147,14 +169,8 @@ public class AppointmentService {
 
                             Long vetToValidate = newVetId != null ? newVetId : appointment.getVeterinarianId();
 
-                            return repository.countVetConflicts(vetToValidate, newDate)
-                                    .flatMap(conflicts -> {
-                                        if (conflicts > 0) {
-                                            return Mono.error(new BusinessException(
-                                                    HttpStatus.BAD_REQUEST,
-                                                    "El veterinario ya tiene cita en ese horario"));
-                                        }
-
+                            return validateVetAvailability(vetToValidate, newDate, appointment.getId())
+                                    .then(Mono.defer(() -> {
                                         appointment.setAppointmentDate(newDate);
 
                                         if (newVetId != null) {
@@ -165,7 +181,7 @@ public class AppointmentService {
                                         appointment.setUpdatedAt(LocalDateTime.now());
 
                                         return repository.save(appointment);
-                                    });
+                                    }));
                         })));
     }
 
@@ -183,8 +199,15 @@ public class AppointmentService {
     }
 
     private Mono<Void> validateOwnership(Appointment appointment, String role, Long userId) {
-        if ("CLIENT".equals(role) && !appointment.getClientId().equals(userId)) {
-            return Mono.error(new BusinessException(HttpStatus.FORBIDDEN, "No puede acceder a esta cita"));
+        if ("CLIENT".equals(role)) {
+            return resolveClientId(userId)
+                    .flatMap(clientId -> {
+                        if (!appointment.getClientId().equals(clientId)) {
+                            return Mono.error(new BusinessException(HttpStatus.FORBIDDEN, "No puede acceder a esta cita"));
+                        }
+
+                        return Mono.empty();
+                    });
         }
 
         if ("VETERINARY".equals(role) && !appointment.getVeterinarianId().equals(userId)) {
@@ -194,18 +217,45 @@ public class AppointmentService {
         return Mono.empty();
     }
 
+    private Mono<Long> resolveClientId(Long userId) {
+        return repository.findClientIdByUserId(userId)
+                .switchIfEmpty(Mono.error(new BusinessException(
+                        HttpStatus.FORBIDDEN,
+                        "No existe un cliente asociado al usuario autenticado")));
+    }
+
+    private Mono<Void> validateVetAvailability(Long vetId, LocalDateTime appointmentDate, Long excludedAppointmentId) {
+        LocalDateTime blockEnd = appointmentDate.plusMinutes(APPOINTMENT_BLOCK_MINUTES);
+
+        return repository.countVetConflicts(vetId, appointmentDate, blockEnd, excludedAppointmentId)
+                .flatMap(conflicts -> {
+                    if (conflicts > 0) {
+                        return Mono.error(new BusinessException(
+                                HttpStatus.BAD_REQUEST,
+                                "El veterinario se encuentra ocupado en ese horario"));
+                    }
+
+                    return Mono.empty();
+                });
+    }
+
     private void validateStatusTransition(AppointmentStatus current, AppointmentStatus next) {
         if (current == AppointmentStatus.PENDING) {
-            if (next != AppointmentStatus.RESCHEDULED
-                    && next != AppointmentStatus.ATTENDED
-                    && next != AppointmentStatus.CANCELLED) {
+            if (next != AppointmentStatus.IN_PROGRESS && next != AppointmentStatus.CANCELLED) {
                 throw new BusinessException(HttpStatus.BAD_REQUEST,
-                        "PENDING solo puede cambiar a RESCHEDULED, ATTENDED o CANCELLED");
+                        "PENDING solo puede cambiar a IN_PROGRESS o CANCELLED");
             }
         } else if (current == AppointmentStatus.RESCHEDULED) {
-            if (next != AppointmentStatus.ATTENDED && next != AppointmentStatus.CANCELLED) {
+            if (next != AppointmentStatus.IN_PROGRESS && next != AppointmentStatus.CANCELLED) {
                 throw new BusinessException(HttpStatus.BAD_REQUEST,
-                        "RESCHEDULED solo puede cambiar a ATTENDED o CANCELLED");
+                        "RESCHEDULED solo puede cambiar a IN_PROGRESS o CANCELLED");
+            }
+        } else if (current == AppointmentStatus.IN_PROGRESS) {
+            if (next != AppointmentStatus.ATTENDED
+                    && next != AppointmentStatus.RESCHEDULED
+                    && next != AppointmentStatus.CANCELLED) {
+                throw new BusinessException(HttpStatus.BAD_REQUEST,
+                        "IN_PROGRESS solo puede cambiar a ATTENDED, RESCHEDULED o CANCELLED");
             }
         } else if (current == AppointmentStatus.ATTENDED) {
             if (next != AppointmentStatus.PAID) {
